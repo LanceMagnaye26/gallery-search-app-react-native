@@ -12,6 +12,9 @@
     "expo": "^30.0.1",
     "react": "16.3.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-30.0.0.tar.gz",
-    "react-native-elements": "^0.19.1"
+    "react-native-elements": "^0.19.1",
+    "react-native-image-zoom-viewer": "^2.2.23",
+    "react-native-lightbox": "^0.8.0",
+    "react-native-modal": "^6.5.0"
   }
 }

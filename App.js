@@ -1,6 +1,28 @@
 import React from 'react';
-import { StyleSheet, Text, View, Animated, Easing, StatusBar, Platform, ListView, TouchableHighlight, Image } from 'react-native';
-import { Header, SearchBar } from 'react-native-elements';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Animated,
+  Easing,
+  StatusBar,
+  Platform,
+  ListView,
+  TouchableHighlight,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
+import {
+  Header,
+  SearchBar,
+  Icon
+} from 'react-native-elements';
+import Modal from "react-native-modal";
+
+const WINDOW_WIDTH = Dimensions.get('window').width;
+const WINDOW_HEIGHT = Dimensions.get('window').height;
+const BASE_PADDING = 10;
 
 export default class App extends React.Component {
   constructor() {
@@ -12,29 +34,41 @@ export default class App extends React.Component {
     this.state = {
       searchBarLower: true,
       rightIcon: true,
-      todoDataSource: ds
+      todoDataSource: ds,
+      currentURL: '',
+      modalUp: false,
     }
   }
 
-  componentDidMount = () => {
-    console.log();
+  componentWillUnmount = () => {
+    console.log('unmounting')
+    this._toggleModal();
   }
 
-  pressRow = (rowID) => {
-    console.log('Row number ' + rowID);
+
+  componentDidMount = () => {
+  }
+
+
+  pressRow = (url) => {
+    this._toggleModal();
+    this.setState({
+      currentURL: url,
+    });
+    console.log('URL: ' + url);
   }
 
   async
   renderRow = (task, sectionID, rowID, highlightRow) => {
     return (
       <TouchableHighlight onPress={() => {
-        this.pressRow(rowID);
+        this.pressRow(task);
         highlightRow(sectionID, rowID);
       }}>
         <View style={styles.row}>
           <Image
             style={styles.image}
-            source={{ uri: task.largeImageURL }}
+            source={{ uri: task }}
           />
         </View>
       </TouchableHighlight>
@@ -44,17 +78,24 @@ export default class App extends React.Component {
 
   async
   fetchTodos = (searchItem) => {
+    this.setState({
+      listOfImages: []
+    })
     const webSearch = encodeURIComponent(searchItem);
     console.log(webSearch);
-    const fetchURL = `https://pixabay.com/api/?key=10372042-64b612b13ea81569c2b741292&per_page=10&page&image_type=photo&pretty=true&q=${webSearch}`;
+    const fetchURL = `https://pixabay.com/api/?key=10372042-64b612b13ea81569c2b741292&per_page=20&page&image_type=photo&pretty=true&q=${webSearch}`;
     console.log(fetchURL);
     fetch(fetchURL)
       .then((response) => response.json())
       .then((response) => {
-        // console.log(response.hits)
+        let placeholderArray = [];
+        for (var i = 0; i < response.hits.length; i++) {
+          placeholderArray.push(response.hits[i].largeImageURL);
+        }
+
         this.setState({
-          todoDataSource: this.state.todoDataSource.cloneWithRows(response.hits)
-        });
+          todoDataSource: this.state.todoDataSource.cloneWithRows(placeholderArray)
+        })
       })
   }
 
@@ -71,14 +112,24 @@ export default class App extends React.Component {
     const theValue = this.state.searchBarLower ? 1 : 0;
     Animated.timing(this.searchTop, {
       toValue: theValue,
-      duration: 500,
+      duration: 250,
       easing: Easing.ease,
     }).start();
   }
 
   _handleOnChangeText = (text) => {
-    this.fetchTodos(text);
+    this.setState({ textValue: text });
 
+  }
+
+  _onSubmitHandler = (event) => {
+    console.log(this.state.textValue);
+    this._lowerSearchBar();
+    this.fetchTodos(this.state.textValue);
+  }
+
+  _toggleModal = () => {
+    this.setState({ modalUp: !this.state.modalUp, })
   }
 
 
@@ -98,38 +149,60 @@ export default class App extends React.Component {
       <View style={styles.container}>
         <StatusBar hidden={true} />
 
-          <Animated.View style={bgMoveStyle}>
-            <SearchBar
-              noIcon
-              platform={Platform.OS}
-              placeholder='Search'
-              containerStyle={[styles.searchContainer]}
-              inputStyle={{
-                backgroundColor: 'rgb(44, 86, 168)',
-                color: '#fff'
-
-              }}
-              clearIcon={{ name: 'clear', color: 'red' }}
-              onChangeText={(text) => this._handleOnChangeText(text)}
-              cancelIcon={{ type: 'font-awesome', name: 'chevron-left' }}
+        {this.state.modalUp && <Modal transparent={true} isVisible={true}>
+          <View style={{ width: WINDOW_WIDTH }}>
+            <StatusBar hidden={true} />
+            <Icon
+              name='clear'
+              color='red'
+              onPress={this._toggleModal}
+              containerStyle={{ width: 20, height: 20 }}
             />
-          </Animated.View>
+            <TouchableOpacity>
+              <Text style={{}}></Text>
+            </TouchableOpacity>
+            <Image
+              style={{width: "100%", height: 300,  resizeMode: 'center'}}
+              source={{ uri: this.state.currentURL }}
+            />
 
-          <Header
-            placement="center"
-            leftComponent={{ icon: 'menu', color: '#fff' }}
-            centerComponent={{ text: 'Gallery'.toUpperCase(), style: { color: '#fff' } }}
-            rightComponent={{ icon: icon, color: '#fff', onPress: this._lowerSearchBar.bind(this) }}
-            containerStyle={{
-              backgroundColor: 'rgb(61, 109, 204)',
-              color: 'rgb(61, 109, 204)',
-              justifyContent: 'space-around',
+          </View>
+        </Modal>}
+
+        <Animated.View style={bgMoveStyle}>
+          <SearchBar
+            noIcon
+            platform={Platform.OS}
+            placeholder='Search'
+            containerStyle={[styles.searchContainer]}
+            inputStyle={{
+              backgroundColor: 'rgb(44, 86, 168)',
+              color: '#fff'
+
             }}
-            outerContainerStyles={{ borderBottomWidth: 0, }}
-            backgroundColor='rgb(61, 109, 204)'
+            clearIcon={{ name: 'clear', color: 'red' }}
+            onChangeText={(text) => this._handleOnChangeText(text)}
+            onSubmitEditing={(event) => this._onSubmitHandler(event)}
+            cancelIcon={{ type: 'font-awesome', name: 'chevron-left' }}
           />
+        </Animated.View>
+
+        <Header
+          placement="center"
+          leftComponent={{ icon: 'info-outline', color: '#fff' }}
+          centerComponent={{ text: 'Gallery'.toUpperCase(), style: { color: '#fff' } }}
+          rightComponent={{ icon: icon, color: '#fff', onPress: this._lowerSearchBar.bind(this) }}
+          containerStyle={{
+            backgroundColor: 'rgb(61, 109, 204)',
+            color: 'rgb(61, 109, 204)',
+            justifyContent: 'space-around',
+          }}
+          outerContainerStyles={{ borderBottomWidth: 0, }}
+          backgroundColor='rgb(61, 109, 204)'
+        />
 
         <ListView
+          enableEmptySections={true}
           style={styles.listView}
           dataSource={this.state.todoDataSource}
           renderRow={this.renderRow}
@@ -172,6 +245,13 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     zIndex: -1
+  },
 
-  }
+  modalView: {
+    backgroundColor: "#aaa",
+    height: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
 });
