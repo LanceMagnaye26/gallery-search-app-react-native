@@ -139,6 +139,14 @@ export default class App extends React.Component {
     this.setState({ showAlert: !this.state.showAlert, })
   }
 
+  showAlert = () => {
+    this.setState({ showAlert: true, })
+  }
+
+  hideAlert = () => {
+    this.setState({ showAlert: false, })
+  }
+
   render() {
     const icon = this.state.rightIcon ? 'search' : 'arrow-upward';
 
@@ -166,10 +174,10 @@ export default class App extends React.Component {
           confirmText="Ok"
           confirmButtonColor="rgb(61, 109, 204)"
           onCancelPressed={() => {
-            this.toggleAlert();
+            this.hideAlert();
           }}
           onConfirmPressed={() => {
-            this.toggleAlert();
+            this.hideAlert();
           }}
         />
 
@@ -210,7 +218,7 @@ export default class App extends React.Component {
 
         <Header
           placement="center"
-          leftComponent={{ icon: 'info-outline', color: '#fff', onPress: this.toggleAlert }}
+          leftComponent={{ icon: 'info-outline', color: '#fff', onPress: this.showAlert }}
           centerComponent={{ text: 'Gallery'.toUpperCase(), style: { color: '#fff' } }}
           rightComponent={{ icon: icon, color: '#fff', onPress: this._lowerSearchBar.bind(this) }}
           containerStyle={{
