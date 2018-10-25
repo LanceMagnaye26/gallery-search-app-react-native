@@ -12,6 +12,7 @@ import {
   Image,
   Dimensions,
   TouchableOpacity,
+  TouchableNativeFeedback
 } from 'react-native';
 import {
   Header,
@@ -19,6 +20,7 @@ import {
   Icon
 } from 'react-native-elements';
 import Modal from "react-native-modal";
+import AwesomeAlert from 'react-native-awesome-alerts';
 
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
@@ -37,6 +39,7 @@ export default class App extends React.Component {
       todoDataSource: ds,
       currentURL: '',
       modalUp: false,
+      showAlert: false,
     }
   }
 
@@ -61,7 +64,7 @@ export default class App extends React.Component {
   async
   renderRow = (task, sectionID, rowID, highlightRow) => {
     return (
-      <TouchableHighlight onPress={() => {
+      <TouchableNativeFeedback onPress={() => {
         this.pressRow(task);
         highlightRow(sectionID, rowID);
       }}>
@@ -71,7 +74,7 @@ export default class App extends React.Component {
             source={{ uri: task }}
           />
         </View>
-      </TouchableHighlight>
+      </TouchableNativeFeedback>
 
     )
   }
@@ -132,6 +135,9 @@ export default class App extends React.Component {
     this.setState({ modalUp: !this.state.modalUp, })
   }
 
+  toggleAlert = () => {
+    this.setState({ showAlert: !this.state.showAlert, })
+  }
 
   render() {
     const icon = this.state.rightIcon ? 'search' : 'arrow-upward';
@@ -149,6 +155,24 @@ export default class App extends React.Component {
       <View style={styles.container}>
         <StatusBar hidden={true} />
 
+        <AwesomeAlert
+          show={this.state.showAlert}
+          showProgress={false}
+          title="Information"
+          message="This app was created by Lance Magnaye"
+          closeOnTouchOutside={true}
+          closeOnHardwareBackPress={false}
+          showConfirmButton={true}
+          confirmText="Ok"
+          confirmButtonColor="rgb(61, 109, 204)"
+          onCancelPressed={() => {
+            this.toggleAlert();
+          }}
+          onConfirmPressed={() => {
+            this.toggleAlert();
+          }}
+        />
+
         {this.state.modalUp && <Modal transparent={true} isVisible={true}>
           <View style={{ width: WINDOW_WIDTH }}>
             <StatusBar hidden={true} />
@@ -158,11 +182,8 @@ export default class App extends React.Component {
               onPress={this._toggleModal}
               containerStyle={{ width: 20, height: 20 }}
             />
-            <TouchableOpacity>
-              <Text style={{}}></Text>
-            </TouchableOpacity>
             <Image
-              style={{width: "100%", height: 300,  resizeMode: 'center'}}
+              style={{ width: "100%", height: 300, resizeMode: 'center' }}
               source={{ uri: this.state.currentURL }}
             />
 
@@ -189,7 +210,7 @@ export default class App extends React.Component {
 
         <Header
           placement="center"
-          leftComponent={{ icon: 'info-outline', color: '#fff' }}
+          leftComponent={{ icon: 'info-outline', color: '#fff', onPress: this.toggleAlert }}
           centerComponent={{ text: 'Gallery'.toUpperCase(), style: { color: '#fff' } }}
           rightComponent={{ icon: icon, color: '#fff', onPress: this._lowerSearchBar.bind(this) }}
           containerStyle={{
@@ -234,12 +255,18 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'center',
+    borderColor: 'rgb(44, 86, 168)',
+    borderWidth: 5,
+    marginTop: 20,
+    borderRadius: 20
+
   },
   image: {
     flex: 1,
     width: 100,
     height: 100,
     resizeMode: 'cover',
+    borderRadius: 10,
   },
   listView: {
     flex: 1,
